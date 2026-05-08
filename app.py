@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import csv
 import io
 import threading
@@ -9,8 +10,17 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "smart_refill_dev_key_change_in_production")
+_secret_key = os.environ.get("SECRET_KEY")
+if not _secret_key:
+    # In development without a .env file, use a dev-only fallback
+    # In production, always set SECRET_KEY as an environment variable
+    import warnings
+    warnings.warn("SECRET_KEY not set! Using insecure dev key. Set SECRET_KEY in your .env file.", stacklevel=2)
+    _secret_key = "dev-only-insecure-key-set-SECRET_KEY-in-env"
+app.secret_key = _secret_key
 
 # ─── Indian Number formatting filter (1,00,000 format) ───
 def indian_format(value, decimals=0):
